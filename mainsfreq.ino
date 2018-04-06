@@ -10,6 +10,7 @@
 
 #define MQTT_HOST   "mosquitto.space.revspace.nl"
 #define MQTT_PORT   1883
+#define MQTT_TOPIC  "revspace/ac/frequency"
 
 #define PUBLISH_INTERVAL 30
 #define BUFFER_SIZE     100
@@ -112,7 +113,7 @@ void loop(void)
         // publish over mqtt
         char value[16];
         sprintf(value, "%2.2f Hz", sum / 100.0);
-        mqtt_publish("revspace/ac/frequency", value);
+        mqtt_publish(MQTT_TOPIC, value);
     }
 }
 
