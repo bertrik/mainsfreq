@@ -20,6 +20,7 @@ static volatile unsigned long count = 0;
 
 // state variables
 static int secs_prev = 0;
+static unsigned long count_prev = 0;
 static int buffer[100];
 
 static char esp_id[16];
@@ -73,12 +74,20 @@ void setup(void)
     // connect interrupt
     pinMode(PIN_MAINS, INPUT_PULLUP);
     attachInterrupt(digitalPinToInterrupt(PIN_MAINS), mains_interrupt, FALLING);
+
+    // sync to second
+    int secs;
+    secs_prev = millis() / 1000;
+    do {
+        int secs = millis() / 1000;
+    } while (secs == secs_prev);
+    count_prev = count;
+    secs_prev = secs;
 }
+    
 
 void loop(void)
 {
-    static unsigned long count_prev = 0;
-    static int secs_prev = 0;
     static int secs_pub = 0;
     static int idx = 0;
 
