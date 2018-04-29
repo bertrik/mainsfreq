@@ -79,7 +79,7 @@ void setup(void)
     int secs;
     secs_prev = millis() / 1000;
     do {
-        int secs = millis() / 1000;
+        secs = millis() / 1000;
     } while (secs == secs_prev);
     count_prev = count;
     secs_prev = secs;
