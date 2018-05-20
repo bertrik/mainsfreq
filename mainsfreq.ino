@@ -22,6 +22,7 @@ static volatile unsigned long count = 0;
 // state variables
 static int secs_prev = 0;
 static unsigned long count_prev = 0;
+static unsigned long msec_prev = 0;
 static int buffer[100];
 
 static char esp_id[16];
@@ -32,7 +33,11 @@ static PubSubClient mqttClient(wifiClient);
 // mains interrupt, is called approximately 50 times per second
 static void mains_interrupt(void) 
 {
-    count++;
+    unsigned long msec = millis();
+    if ((msec - msec_prev) > 8) {
+        count++;
+        msec_prev = msec;
+    }
 }
 
 static void mqtt_publish(const char *topic, const char *text)
