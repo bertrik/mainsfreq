@@ -6,13 +6,14 @@
 
 #include "Arduino.h"
 
-#define PIN_MAINS   D0
+#define PIN_LED     D4
+#define PIN_MAINS   D5
 
 #define MQTT_HOST   "mosquitto.space.revspace.nl"
 #define MQTT_PORT   1883
 #define MQTT_TOPIC  "revspace/ac/frequency"
 
-#define PUBLISH_INTERVAL 30
+#define PUBLISH_INTERVAL 10
 #define BUFFER_SIZE     100
 
 // our mains cycle counter
@@ -68,12 +69,15 @@ void setup(void)
     
     // initialize buffer with nominal value
     for (int i = 0; i < BUFFER_SIZE; i++) {
-        buffer[i] = 50;
+        buffer[i] = 100;
     }
     
     // connect interrupt
     pinMode(PIN_MAINS, INPUT_PULLUP);
     attachInterrupt(digitalPinToInterrupt(PIN_MAINS), mains_interrupt, FALLING);
+    
+    // LED
+    pinMode(PIN_LED, OUTPUT);
 
     // sync to second
     int secs;
@@ -121,9 +125,13 @@ void loop(void)
         
         // publish over mqtt
         char value[16];
-        sprintf(value, "%2.2f Hz", sum / 100.0);
+        sprintf(value, "%2.2f Hz", sum / 200.0);
         mqtt_publish(MQTT_TOPIC, value);
     }
+    
+    // update LED
+    int led = (count / 50) & 1;
+    digitalWrite(PIN_LED, led);
 }
 
 
