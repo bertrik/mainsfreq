@@ -23,7 +23,7 @@ static volatile unsigned long count = 0;
 static int secs_prev = 0;
 static unsigned long count_prev = 0;
 static unsigned long msec_prev = 0;
-static int buffer[100];
+static int buffer[BUFFER_SIZE];
 
 static char esp_id[16];
 static WiFiManager wifiManager;
