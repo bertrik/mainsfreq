@@ -11,7 +11,7 @@
 
 #define MQTT_HOST   "mosquitto.space.revspace.nl"
 #define MQTT_PORT   1883
-#define MQTT_TOPIC  "revspace/ac/frequency"
+#define MQTT_TOPIC  "revspace/sensors/ac/frequency"
 
 #define PUBLISH_INTERVAL 10
 #define BUFFER_SIZE      50
