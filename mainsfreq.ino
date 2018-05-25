@@ -14,7 +14,7 @@
 #define MQTT_TOPIC  "revspace/ac/frequency"
 
 #define PUBLISH_INTERVAL 10
-#define BUFFER_SIZE     100
+#define BUFFER_SIZE      50
 
 // our mains cycle counter
 static volatile unsigned long count = 0;
@@ -130,7 +130,7 @@ void loop(void)
         
         // publish over mqtt
         char value[16];
-        sprintf(value, "%2.2f Hz", sum / 200.0);
+        sprintf(value, "%2.2f Hz", sum / 100.0);
         mqtt_publish(MQTT_TOPIC, value);
     }
     
