@@ -16,7 +16,7 @@
 #define PUBLISH_INTERVAL 10
 #define BUFFER_SIZE      50
 
-// our mains cycle counter
+// our mains interrupt counter
 static volatile unsigned long count = 0;
 
 // state variables
@@ -30,7 +30,7 @@ static WiFiManager wifiManager;
 static WiFiClient wifiClient;
 static PubSubClient mqttClient(wifiClient);
 
-// mains interrupt, is called approximately 50 times per second
+// mains interrupt, is called approximately 100 times per second
 static void mains_interrupt(void) 
 {
     unsigned long msec = millis();
@@ -106,7 +106,7 @@ void loop(void)
     if (secs != secs_prev) {
         secs_prev = secs;
     
-        // get a snapshot of the cycle counter
+        // get a snapshot of the interrupt counter
         unsigned long count_copy = count;
 
         // calculate increase
@@ -122,7 +122,7 @@ void loop(void)
     if ((secs - secs_pub) > PUBLISH_INTERVAL) {
         secs_pub = secs;
 
-        // calculate total cycles over 100 seconds
+        // calculate total interrupts in buffer
         int sum = 0;
         for (int i = 0; i < BUFFER_SIZE; i++) {
             sum += buffer[i];
