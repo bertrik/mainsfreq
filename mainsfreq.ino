@@ -137,6 +137,9 @@ void loop(void)
     // update LED
     int led = (count / 50) & 1;
     digitalWrite(PIN_LED, led);
+    
+    // keep MQTT alive
+    mqttClient.loop();
 }
 
 
