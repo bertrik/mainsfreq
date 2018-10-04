@@ -3,9 +3,11 @@
 #include <ESP8266WiFi.h>
 #include <WiFiManager.h>
 #include <PubSubClient.h>
+#include <Servo.h>
 
 #include "Arduino.h"
 
+#define PIN_SERVO   D1
 #define PIN_LED     D4
 #define PIN_MAINS   D5
 
@@ -29,6 +31,7 @@ static char esp_id[16];
 static WiFiManager wifiManager;
 static WiFiClient wifiClient;
 static PubSubClient mqttClient(wifiClient);
+static Servo servo;
 
 // mains interrupt, is called approximately 100 times per second
 static void mains_interrupt(void) 
@@ -57,6 +60,13 @@ static void mqtt_publish(const char *topic, const char *text)
     }
 }
 
+static void servo_move(int frequency)
+{
+    int angle = map(frequency, 4990, 5010, 0, 180);
+    int position = constrain(angle, 0, 180);
+    servo.write(position);
+}
+
 void setup(void)
 {
     // welcome message
@@ -67,6 +77,9 @@ void setup(void)
     sprintf(esp_id, "%08X", ESP.getChipId());
     Serial.print("ESP ID: ");
     Serial.println(esp_id);
+    
+    // init servo
+    servo.attach(PIN_SERVO);
 
     // connect to wifi
     Serial.println("Starting WIFI manager ...");
@@ -99,6 +112,7 @@ void loop(void)
 {
     static int secs_pub = 0;
     static int idx = 0;
+    static int sum = 0;
 
     int secs = millis() / 1000;
 
@@ -116,22 +130,25 @@ void loop(void)
         // store it
         buffer[idx] = count_diff;
         idx = (idx + 1) % BUFFER_SIZE;
-    }
-    
-    // publish once in a while
-    if ((secs - secs_pub) > PUBLISH_INTERVAL) {
-        secs_pub = secs;
 
         // calculate total interrupts in buffer
         int sum = 0;
         for (int i = 0; i < BUFFER_SIZE; i++) {
             sum += buffer[i];
         }
-        
+    }
+    
+    // publish once in a while
+    if ((secs - secs_pub) > PUBLISH_INTERVAL) {
+        secs_pub = secs;
+
         // publish over mqtt
         char value[16];
         sprintf(value, "%2.2f Hz", sum / 100.0);
         mqtt_publish(MQTT_TOPIC, value);
+        
+        // update servo
+        servo_move(sum);
     }
     
     // update LED
