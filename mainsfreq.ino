@@ -40,11 +40,15 @@ static void mains_interrupt(void)
     }
 }
 
-static void mqtt_publish(const char *topic, const char *text)
+static bool mqtt_publish(const char *topic, const char *text, bool retained)
 {
+    bool result = false;
+
     if (!mqttClient.connected()) {
+        Serial.print("Connecting MQTT...");
         mqttClient.setServer(MQTT_HOST, MQTT_PORT);
-        mqttClient.connect(esp_id);
+        result = mqttClient.connect(esp_id, topic, 0, retained, "offline");
+        Serial.println(result ? "OK" : "FAIL");
     }
     if (mqttClient.connected()) {
         Serial.print("Publishing ");
@@ -52,9 +56,10 @@ static void mqtt_publish(const char *topic, const char *text)
         Serial.print(" to ");
         Serial.print(topic);
         Serial.print("...");
-        int result = mqttClient.publish(topic, text, true);
+        result = mqttClient.publish(topic, text, retained);
         Serial.println(result ? "OK" : "FAIL");
     }
+    return result;
 }
 
 void setup(void)
@@ -70,6 +75,7 @@ void setup(void)
 
     // connect to wifi
     Serial.println("Starting WIFI manager ...");
+    wifiManager.setConfigPortalTimeout(120);
     wifiManager.autoConnect("ESP-MAINSFREQ");
     
     // initialize buffer with nominal value
@@ -131,7 +137,13 @@ void loop(void)
         // publish over mqtt
         char value[16];
         sprintf(value, "%2.2f Hz", sum / 100.0);
-        mqtt_publish(MQTT_TOPIC, value);
+        mqtt_publish(MQTT_TOPIC, value, true);
+
+        // verify network connection and reboot on failure
+        if (WiFi.status() != WL_CONNECTED) {
+            Serial.println("Restarting ESP...");
+            ESP.restart();
+        }
     }
     
     // update LED
@@ -141,6 +153,5 @@ void loop(void)
     // keep MQTT alive
     mqttClient.loop();
 }
-
 
 
