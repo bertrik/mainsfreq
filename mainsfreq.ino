@@ -103,6 +103,7 @@ void setup(void)
 
 void loop(void)
 {
+    static int fail_count = 0;
     static int secs_pub = 0;
     static int idx = 0;
 
@@ -137,10 +138,14 @@ void loop(void)
         // publish over mqtt
         char value[16];
         sprintf(value, "%2.2f Hz", sum / 100.0);
-        mqtt_publish(MQTT_TOPIC, value, true);
-
-        // verify network connection and reboot on failure
-        if (WiFi.status() != WL_CONNECTED) {
+        if (mqtt_publish(MQTT_TOPIC, value, true)) {
+            fail_count = 0;
+        } else {
+            fail_count++;
+        }
+        
+        // reboot if publish failed too often
+        if (fail_count > 6) {
             Serial.println("Restarting ESP...");
             ESP.restart();
         }
