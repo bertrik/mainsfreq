@@ -31,7 +31,7 @@ static WiFiClient wifiClient;
 static PubSubClient mqttClient(wifiClient);
 
 // mains interrupt, is called approximately 100 times per second
-static void mains_interrupt(void) 
+static void mains_interrupt(void)
 {
     unsigned long msec = millis();
     if ((msec - msec_prev) > 8) {
@@ -77,16 +77,16 @@ void setup(void)
     Serial.println("Starting WIFI manager ...");
     wifiManager.setConfigPortalTimeout(120);
     wifiManager.autoConnect("ESP-MAINSFREQ");
-    
+
     // initialize buffer with nominal value
     for (int i = 0; i < BUFFER_SIZE; i++) {
         buffer[i] = 100;
     }
-    
+
     // connect interrupt
     pinMode(PIN_MAINS, INPUT_PULLUP);
     attachInterrupt(digitalPinToInterrupt(PIN_MAINS), mains_interrupt, FALLING);
-    
+
     // LED
     pinMode(PIN_LED, OUTPUT);
 
@@ -99,7 +99,7 @@ void setup(void)
     count_prev = count;
     secs_prev = secs;
 }
-    
+
 
 void loop(void)
 {
@@ -112,19 +112,18 @@ void loop(void)
     // new second?
     if (secs != secs_prev) {
         secs_prev = secs;
-    
+
         // get a snapshot of the interrupt counter
         unsigned long count_copy = count;
 
         // calculate increase
         unsigned long count_diff = count_copy - count_prev;
         count_prev = count_copy;
-        
+
         // store it
         buffer[idx] = count_diff;
         idx = (idx + 1) % BUFFER_SIZE;
     }
-    
     // publish once in a while
     if ((secs - secs_pub) > PUBLISH_INTERVAL) {
         secs_pub = secs;
@@ -134,7 +133,7 @@ void loop(void)
         for (int i = 0; i < BUFFER_SIZE; i++) {
             sum += buffer[i];
         }
-        
+
         // publish over mqtt
         char value[16];
         sprintf(value, "%2.2f Hz", sum / 100.0);
@@ -143,20 +142,18 @@ void loop(void)
         } else {
             fail_count++;
         }
-        
+
         // reboot if publish failed too often
         if (fail_count > 6) {
             Serial.println("Restarting ESP...");
             ESP.restart();
         }
     }
-    
     // update LED
     int led = (count / 50) & 1;
     digitalWrite(PIN_LED, led);
-    
+
     // keep MQTT alive
     mqttClient.loop();
 }
-
 
