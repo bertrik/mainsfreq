@@ -1,10 +1,11 @@
+#include <Arduino.h>
+#include <ArduinoOTA.h>
+
 #include <stdio.h>
 
 #include <ESP8266WiFi.h>
 #include <WiFiManager.h>
 #include <PubSubClient.h>
-
-#include "Arduino.h"
 
 #define PIN_LED     D4
 #define PIN_MAINS   D5
@@ -31,7 +32,7 @@ static WiFiClient wifiClient;
 static PubSubClient mqttClient(wifiClient);
 
 // mains interrupt, is called approximately 100 times per second
-static void mains_interrupt(void)
+ICACHE_RAM_ATTR static void mains_interrupt(void)
 {
     unsigned long msec = millis();
     if ((msec - msec_prev) > 8) {
@@ -66,7 +67,12 @@ void setup(void)
 {
     // welcome message
     Serial.begin(115200);
-    Serial.println("AC mains frequency counter");
+    Serial.println("\nAC mains frequency counter");
+
+    // OTA
+    ArduinoOTA.setHostname("esp-mains");
+    ArduinoOTA.setPassword("mains");
+    ArduinoOTA.begin();
 
     // get ESP id
     sprintf(esp_id, "%08X", ESP.getChipId());
@@ -155,5 +161,7 @@ void loop(void)
 
     // keep MQTT alive
     mqttClient.loop();
-}
 
+    // handle OTA
+    ArduinoOTA.handle();
+}
