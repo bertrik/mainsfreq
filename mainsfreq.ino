@@ -1,5 +1,4 @@
 #include <Arduino.h>
-#include <ArduinoOTA.h>
 
 #include <stdio.h>
 
@@ -68,11 +67,6 @@ void setup(void)
     // welcome message
     Serial.begin(115200);
     Serial.println("\nAC mains frequency counter");
-
-    // OTA
-    ArduinoOTA.setHostname("esp-mains");
-    ArduinoOTA.setPassword("mains");
-    ArduinoOTA.begin();
 
     // get ESP id
     sprintf(esp_id, "%08X", ESP.getChipId());
@@ -161,7 +155,4 @@ void loop(void)
 
     // keep MQTT alive
     mqttClient.loop();
-
-    // handle OTA
-    ArduinoOTA.handle();
 }
